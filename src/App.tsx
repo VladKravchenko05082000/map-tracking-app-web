@@ -1,26 +1,33 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import theme from "theme";
 
-function App() {
+import Navigation from "navigation";
+import { CssBaseline } from "@mui/material";
+import { ThemeProvider } from "@emotion/react";
+import { ErrorBoundary } from "components";
+import { StoreProvider } from "context";
+
+const RootApp: React.FC = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <ErrorBoundary>
+        <StoreProvider>
+          <CssBaseline />
+          <Navigation />
+        </StoreProvider>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
-}
+};
 
-export default App;
+export default RootApp;
+
+const router = createBrowserRouter([{ path: "*", Component: RootApp }]);
+
+export const App: React.FC = () => {
+  return (
+    <>
+      <RouterProvider router={router} />
+    </>
+  );
+};
