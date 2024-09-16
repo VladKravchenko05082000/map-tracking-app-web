@@ -1,45 +1,44 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 
-interface MapObject {
-  id: string;
-  latitude: number;
-  longitude: number;
-  direction: string;
-  isLost?: boolean;
-}
+import { fetchMapObject } from "api";
+
+import { MapObject } from "./types";
 
 class MapStore {
-  objects: MapObject[] = [];
+  mapObjects: MapObject[] = [];
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  addObject = (object: MapObject) => {
-    const existingObject = this.objects.find(obj => obj.id === object.id);
-    if (existingObject) {
-      if (existingObject.isLost) {
-        return;
-      } else {
-        existingObject.latitude = object.latitude;
-        existingObject.longitude = object.longitude;
-        existingObject.direction = object.direction;
-        existingObject.isLost = false;
-      }
-    } else {
-      this.objects.push({ ...object, isLost: false });
+  fetchAndAddObjectToMap = async (idForFetch: number) => {
+    try {
+      const res: MapObject[] = await fetchMapObject(idForFetch);
+
+      runInAction(() => {
+        if (res.length) {
+          this.mapObjects.push({ ...res[0], isLost: false });
+        }
+      });
+    } catch (e: any) {
+      this.mapObjects = [];
+      throw new Error(e.message);
     }
   };
 
-  markAsLost = (id: string) => {
-    const object = this.objects.find(obj => obj.id === id);
+  markAsLostMapObject = (id: string) => {
+    const object = this.mapObjects.find(obj => obj.id === id);
     if (object) {
       object.isLost = true;
     }
   };
 
-  removeObject = (id: string) => {
-    this.objects = this.objects.filter(obj => obj.id !== id);
+  removeMapObject = (id: string) => {
+    this.mapObjects = this.mapObjects.filter(obj => obj.id !== id);
+  };
+
+  resetMapStore = () => {
+    this.mapObjects = [];
   };
 }
 

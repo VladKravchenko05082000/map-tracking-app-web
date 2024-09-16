@@ -13,9 +13,9 @@ const TokenHandler: React.FC<PropsWithChildren<{}>> = observer(({ children }) =>
 
   if (isAuthenticated) {
     return <Navigate to={ROUTES.map} replace />;
+  } else {
+    return <>{children}</>;
   }
-
-  return <>{children}</>;
 });
 
 export default TokenHandler;

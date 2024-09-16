@@ -9,7 +9,6 @@ import { sendLoginData } from "api";
 class AuthStore {
   isAuthenticated = false;
   pending = false;
-  error = "";
 
   constructor() {
     makeAutoObservable(this);
@@ -32,13 +31,13 @@ class AuthStore {
     } catch (error: any) {
       runInAction(() => {
         this.pending = false;
-        this.error = error.message;
       });
     }
   };
 
-  logout = () => {
+  resetAuthStore = () => {
     this.isAuthenticated = false;
+    this.pending = false;
     Cookies.set(COOKIE_NAMES.isLogin, "0");
   };
 }

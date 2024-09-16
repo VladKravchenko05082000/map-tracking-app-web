@@ -20,6 +20,11 @@ const theme = createTheme({
     body2: {
       fontSize: "24px",
     },
+    body1: {
+      fontSize: "16px",
+      margin: "0 !important",
+      fontWeight: "700",
+    },
   },
   customComponents: {
     centerDiv: {

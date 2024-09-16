@@ -1,62 +1,44 @@
-import { useStoreContext } from "context";
-
-import { Box, Button, Container, Typography } from "@mui/material";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-
-import "leaflet/dist/leaflet.css";
-import { MAP_CONFIG } from "constants/constants";
-import theme from "theme";
 import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
 
+import { useStoreContext } from "context";
+
+import { Box, Typography } from "@mui/material";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+
+import theme from "theme";
+import { MAP_CONFIG } from "constants/constants";
+
+import "leaflet/dist/leaflet.css";
+
 const Map: React.FC = observer(() => {
   const {
-    authStore: { logout },
-    mapStore: { addObject, markAsLost, removeObject, objects },
+    mapStore: { fetchAndAddObjectToMap, markAsLostMapObject, removeMapObject, mapObjects },
   } = useStoreContext();
 
-  const handleLogout = () => {
-    logout();
-  };
-
-  //TODO: Refactor this useEffect for fetch data from store, getFunction, updateFunction, markAsLostFunction, removeFunction
-
-  //TODO:Rename variables
-
-  //TODO: Add comment about approuch with interval
-
   let idForFetch = 1;
+  let idForLost = 1;
 
   useEffect(() => {
     const fetchInterval = setInterval(() => {
-      fetch(`http://localhost:3001/objects?id=${idForFetch}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.length) {
-            data.forEach((object: any) => {
-              addObject({
-                id: object.id,
-                latitude: object.latitude,
-                longitude: object.longitude,
-                direction: object.direction,
-              });
-            });
-          }
-
-          idForFetch++;
-        });
+      fetchAndAddObjectToMap(idForFetch);
+      idForFetch++;
     }, 3000);
 
     const lostInterval = setInterval(() => {
-      objects.forEach(obj => {
-        markAsLost(obj.id);
+      mapObjects.forEach(obj => {
+        if (+obj.id === idForLost) {
+          markAsLostMapObject(obj.id);
+        }
       });
-    }, 10000); //simulating loss of connection to the server(i know about socket.io, but it`s require to write node js server)
+
+      idForLost++;
+    }, 5000);
 
     const removeInterval = setInterval(() => {
-      objects.forEach(obj => {
+      mapObjects.forEach(obj => {
         if (obj.isLost) {
-          removeObject(obj.id);
+          removeMapObject(obj.id);
         }
       });
     }, 5 * 60 * 1000);
@@ -68,57 +50,50 @@ const Map: React.FC = observer(() => {
     };
   }, []);
 
-  //TODO: Split this component(header(logout title) and map component)
-
-  //TODO: Add many items for fetch from db.json(100 items)
-
   return (
-    <Container>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          maxWidth: "65%",
-          mb: 1.6,
-        }}
+    <Box sx={theme.customComponents.centerDiv}>
+      <MapContainer
+        center={[MAP_CONFIG.position.lng, MAP_CONFIG.position.lt]}
+        zoom={4}
+        style={{ height: "500px", width: "100%" }}
       >
-        <Button onClick={handleLogout} variant="outlined">
-          Logout
-        </Button>
+        <TileLayer attribution={MAP_CONFIG.attributionForTitleLayer} url={MAP_CONFIG.urlForTitleLayer} />
+        {mapObjects.map(object => (
+          <Marker
+            key={object.id}
+            position={[object.latitude, object.longitude]}
+            icon={
+              object.isLost ? MAP_CONFIG.imagePinForActiveStatus.redPin : MAP_CONFIG.imagePinForActiveStatus.blackPin
+            }
+          >
+            <Popup>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                <Typography variant="body1" component="p">
+                  ID:
+                  <Typography variant="body1" component="span" sx={{ fontWeight: "400" }}>
+                    {object.id}
+                  </Typography>
+                </Typography>
 
-        <Typography variant="h3" component="h1" sx={{ textAlign: "center" }}>
-          Tracking App
-        </Typography>
-      </Box>
+                <Typography variant="body1" component="p">
+                  Direction:
+                  <Typography variant="body1" component="span" sx={{ fontWeight: "400" }}>
+                    {object.direction}
+                  </Typography>
+                </Typography>
 
-      <Box sx={theme.customComponents.centerDiv}>
-        <MapContainer
-          center={[MAP_CONFIG.position.lng, MAP_CONFIG.position.lt]}
-          zoom={4}
-          style={{ height: "500px", width: "100%" }}
-        >
-          <TileLayer attribution={MAP_CONFIG.attributionForTitleLayer} url={MAP_CONFIG.urlForTitleLayer} />
-          {objects.map(object => (
-            <Marker
-              key={object.id}
-              position={[object.latitude, object.longitude]}
-              icon={
-                object.isLost ? MAP_CONFIG.imagePinForActiveStatus.redPin : MAP_CONFIG.imagePinForActiveStatus.blackPin
-              }
-            >
-              <Popup>
-                <div>
-                  <strong>ID: </strong> {object.id} <br />
-                  <strong>Direction: </strong> {object.direction} <br />
-                  <strong>Status: {object.isLost ? "Lost" : "Active"} </strong>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </Box>
-    </Container>
+                <Typography variant="body1" component="p">
+                  Status:
+                  <Typography variant="body1" component="span" sx={{ fontWeight: "400" }}>
+                    {object.isLost ? "Lost" : "Active"}
+                  </Typography>
+                </Typography>
+              </Box>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </Box>
   );
 });
 
