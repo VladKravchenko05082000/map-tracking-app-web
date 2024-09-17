@@ -39,7 +39,7 @@ const Map: React.FC = observer(() => {
       html: iconHtml,
       iconAnchor: [22, 94],
       popupAnchor: [-3, -76],
-      className: "",
+      className: "", // clear className, to avoid using standard styles
     });
   };
 
