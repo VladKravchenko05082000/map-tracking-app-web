@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
+import L from "leaflet";
 
 import { useStoreContext } from "context";
 
@@ -10,6 +11,7 @@ import theme from "theme";
 import { MAP_CONFIG } from "constants/constants";
 
 import "leaflet/dist/leaflet.css";
+import { DirectionEnum } from "store/map/types";
 
 const Map: React.FC = observer(() => {
   const {
@@ -18,6 +20,28 @@ const Map: React.FC = observer(() => {
 
   let idForFetch = 1;
   let idForLost = 1;
+
+  const directionAngle = {
+    [DirectionEnum.north]: 180,
+    [DirectionEnum.south]: 0,
+    [DirectionEnum.west]: 90,
+    [DirectionEnum.east]: 270,
+  };
+
+  const createRotatedRedIcon = (angle: number, src: string) => {
+    const iconHtml = `
+      <div style="transform: rotate(${angle}deg);">
+        <img src=${src} style="width: 24px; height: 24px;" />
+      </div>
+    `;
+
+    return L.divIcon({
+      html: iconHtml,
+      iconAnchor: [22, 94],
+      popupAnchor: [-3, -76],
+      className: "",
+    });
+  };
 
   useEffect(() => {
     const fetchInterval = setInterval(() => {
@@ -63,7 +87,9 @@ const Map: React.FC = observer(() => {
             key={object.id}
             position={[object.latitude, object.longitude]}
             icon={
-              object.isLost ? MAP_CONFIG.imagePinForActiveStatus.redPin : MAP_CONFIG.imagePinForActiveStatus.blackPin
+              object.isLost
+                ? createRotatedRedIcon(directionAngle[object.direction], MAP_CONFIG.imageSrcForMarker.redPin)
+                : createRotatedRedIcon(directionAngle[object.direction], MAP_CONFIG.imageSrcForMarker.blackPin)
             }
           >
             <Popup>
@@ -76,7 +102,7 @@ const Map: React.FC = observer(() => {
                 </Typography>
 
                 <Typography variant="body1" component="p">
-                  Direction:
+                  DirectionEnum:
                   <Typography variant="body1" component="span" sx={{ fontWeight: "400" }}>
                     {object.direction}
                   </Typography>
