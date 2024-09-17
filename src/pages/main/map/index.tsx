@@ -28,7 +28,7 @@ const Map: React.FC = observer(() => {
     [DirectionEnum.east]: 270,
   };
 
-  const createRotatedRedIcon = (angle: number, src: string) => {
+  const createRotatedIcon = (angle: number, src: string) => {
     const iconHtml = `
       <div style="transform: rotate(${angle}deg);">
         <img src=${src} style="width: 24px; height: 24px;" />
@@ -88,8 +88,8 @@ const Map: React.FC = observer(() => {
             position={[object.latitude, object.longitude]}
             icon={
               object.isLost
-                ? createRotatedRedIcon(directionAngle[object.direction], MAP_CONFIG.imageSrcForMarker.redPin)
-                : createRotatedRedIcon(directionAngle[object.direction], MAP_CONFIG.imageSrcForMarker.blackPin)
+                ? createRotatedIcon(directionAngle[object.direction], MAP_CONFIG.imageSrcForMarker.redPin)
+                : createRotatedIcon(directionAngle[object.direction], MAP_CONFIG.imageSrcForMarker.blackPin)
             }
           >
             <Popup>
